@@ -11,7 +11,7 @@ net=$1
 gpu_id=$2
 snap_iter=$3
 finetune=$4
-snap_dir="/data/tp/nets/$net/snapshots/"
+snap_dir="/home/wangnxr/Documents/caffe_heatmap/snapshots/"
 snapfile="heatmap_train";
 
 mkdir -p $snap_dir

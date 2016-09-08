@@ -5,11 +5,11 @@ layer {
   type: "DataHeatmap"
   top: "data"
   top: "label"
-  visualise: false   
+  visualise: false
   include: { phase: TRAIN }   
   heatmap_data_param {
-    source: "/data/tp/flic/train_shuffle.txt"
-    root_img_dir: "/mnt/ramdisk/tp/flic/"    
+    source: "/home/wangnxr/Documents/patient_pose_data/caffe_heatmap/train_patients.txt"
+    root_img_dir: "/home/wangnxr/Documents/patient_pose_data/caffe_heatmap/"
     batchsize: 14
     cropsize: 248
     outsize: 256
@@ -29,11 +29,11 @@ layer {
   type: "DataHeatmap"
   top: "data"
   top: "label"
-  visualise: false    
+  visualise: false
   include: { phase: TEST }
   heatmap_data_param {
-    source: "/data/tp/flic/test_shuffle.txt"
-    root_img_dir: "/mnt/ramdisk/tp/flic/"
+    source: "/home/wangnxr/Documents/patient_pose_data/caffe_heatmap/test_patients.txt"
+    root_img_dir: "/home/wangnxr/Documents/patient_pose_data/caffe_heatmap/"
     batchsize: 1
     cropsize: 248
     outsize: 256

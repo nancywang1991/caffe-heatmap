@@ -14,4 +14,4 @@ max_iter: 10000000
 momentum: 0.95
 weight_decay: 0.0005
 
-snapshot_prefix: "/data/tp/nets/heatmap-flic-fusion/snapshots/heatmap_train"
+snapshot_prefix: "/home/wangnxr/Documents/caffe_heatmap/snapshots/"
