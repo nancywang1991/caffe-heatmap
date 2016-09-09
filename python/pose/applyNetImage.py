@@ -10,8 +10,7 @@ from plotSkeleton import plotSkeleton
 
 
 # Apply network to a single image
-def applyNetImage(imgFile, net, opt):
-    img = cv2.imread(imgFile)
+def applyNetImage(img, net, opt):
     input_data = prepareImagePose(img)
     net.blobs['data'].data[...] = input_data
     net.forward()
@@ -24,7 +23,7 @@ def applyNetImage(imgFile, net, opt):
     pdb.set_trace()
     if opt["visualize"]:
         visualize(heatmaps, prepareImagePose(img, transpose=False), joints)
-    return joints
+    return heatmaps
 
 def visualize(heatmaps, img, joints):
     colours = np.array([np.array([0, 0, 1]),np.array([0, 1, 0]),np.array([1, 0, 0]),np.array([1, 1, 0]),np.array([0, 1, 1]),np.array([1, 0, 1]),np.array([0, 0, 0])])
@@ -33,5 +32,6 @@ def visualize(heatmaps, img, joints):
     plt.imshow(heatmapVis)
     plotSkeleton(joints, {}, {}, True)
     plt.show()
+
 
 
