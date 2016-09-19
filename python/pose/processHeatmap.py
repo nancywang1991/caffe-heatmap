@@ -11,7 +11,7 @@ def processHeatmap(heatmap, opt):
     heatmapResized = []
     for j in xrange(numJoints):
         heatmapResized.append(cv2.resize(heatmap[0,j,:,:], (opt["dims"][1], opt["dims"][0])))
-    heatmapResized = np.ndarray.transpose(np.array(heatmapResized), (1,2,0)).clip(min=0)
+    heatmapResized = np.ndarray.transpose(np.array(heatmapResized)-1, (1,2,0)).clip(min=0)
 
     joints = heatmapToJoints(heatmapResized, numJoints)
 

@@ -16,7 +16,7 @@ snapfile="heatmap_train";
 
 mkdir -p $snap_dir
 if [ "$finetune" = "1" ]; then cmd="weights"; ext="caffemodel"; else cmd="snapshot"; ext="solverstate"; fi
-if [ "$snap_iter" != "" ] &&  [ "$snap_iter" != "-1" ]; then snap_str="-$cmd $snap_dir/${snapfile}_iter_$snap_iter.$ext"; fi
+if [ "$snap_iter" != "" ] &&  [ "$snap_iter" != "-1" ]; then snap_str="-$cmd $snap_dir/_iter_$snap_iter.$ext"; fi
 
 ./build/tools/caffe train $snap_str \
 -gpu $gpu_id -solver models/$net/solver.prototxt 2>&1 | tee -a $snap_dir/train_0.log

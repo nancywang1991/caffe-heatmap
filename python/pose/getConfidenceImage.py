@@ -9,7 +9,7 @@ def getConfidenceImage(dist, segcpimg_crop, clrs):
     m,n,_ = segcpimg_crop.shape
     bbox = [1,1,n,m]
     background = 1-cv2.Canny(cv2.cvtColor(cv2.convertScaleAbs(segcpimg_crop), cv2.COLOR_BGR2GRAY), 100, 200)
-
+    background_pure = cv2.cvtColor(segcpimg_crop, cv2.COLOR_BGR2GRAY),
     pdf_img = 0.2*np.tile(background, (3,1,1)) + 0.8*(np.zeros(shape=(3,bbox[3], bbox[2]))+1)
 
     # normalize the distributions for visualization
@@ -19,4 +19,4 @@ def getConfidenceImage(dist, segcpimg_crop, clrs):
         single_joint_pdf = np.ndarray.transpose(np.tile([clrs[c,0], clrs[c,2], clrs[c,1]], (dist.shape[0], dist.shape[1], 1)), (2,0,1))
         pdf_img = np.multiply(alpha, single_joint_pdf) + np.multiply((1-alpha), pdf_img)
 
-    return np.ndarray.transpose(pdf_img, (1,2,0))
+    return np.ndarray.transpose(pdf_img, (1,2,0)), background_pure

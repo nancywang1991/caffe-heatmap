@@ -652,9 +652,9 @@ void DataHeatmapLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
                 {
                     for (int j = 0; j < label_width; j++)
                     {
-                        int label_idx = idx_img_aug * label_img_size + idx_ch * label_channel_size + i * label_height + j;
+                        int label_idx = idx_img_aug * label_img_size + idx_ch * label_channel_size + i * label_width + j;
                         float gaussian = ( 1 / ( sigma * sqrt(2 * M_PI) ) ) * exp( -0.5 * ( pow(i - y, 2.0) + pow(j - x, 2.0) ) * pow(1 / sigma, 2.0) );
-                        gaussian = 4 * gaussian;
+                        gaussian = 1+4 * gaussian;
                         top_label[label_idx] = gaussian;
 
                         if (idx_ch == 0)
