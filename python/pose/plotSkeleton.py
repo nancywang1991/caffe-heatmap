@@ -5,8 +5,7 @@ import matplotlib.cm as cmx
 import pdb
 
 
-def plotSkeleton(j, opts, handle, dominantOnly=False):
-
+def plotSkeleton(j, c, opts, handle, ax, dominantOnly=False):
     if len(opts) == 0:
         opts = plotSkeletonDefaultopts(opts)
     if 'jointlinewidth' not in opts.keys():
@@ -34,20 +33,33 @@ def plotSkeleton(j, opts, handle, dominantOnly=False):
             dontPlotSkeleton = True
 
         if ~dontPlotSkeleton:
+            thresh = 0.08
             # draw skelton
             if ~dominantOnly:
-                handle["ula"] = plt.plot(j[0, [4, 6]], j[1, [4, 6]], linewidth=opts["linewidth"], color=opts["clr"][8])
-            handle["ura"] = plt.plot(j[0, [3, 5]], j[1, [3, 5]],  linewidth=opts["linewidth"], color=opts["clr"][8])
+                clr = 8
+		if np.any(c[[4, 6]]<thresh):
+                   clr += 2
+                handle["ula"] = ax.plot(j[0, [4, 6]], j[1, [4, 6]], linewidth=opts["linewidth"], color=opts["clr"][clr])
+            clr = 8
+	    if np.any(c[[3, 5]]<thresh):
+               clr += 2
+            handle["ura"] = ax.plot(j[0, [3, 5]], j[1, [3, 5]], linewidth=opts["linewidth"], color=opts["clr"][clr])
             if ~dominantOnly:
-                handle["lla"] = plt.plot(j[0, [2, 4]], j[1, [2, 4]], linewidth=opts["linewidth"], color=opts["clr"][9])
-            handle["lra"] = plt.plot(j[0, [1, 3]], j[1, [1, 3]], linewidth=opts["linewidth"], color=opts["clr"][9])
+                clr = 9
+		if np.any(c[[2, 4]]<thresh):
+                   clr += 2
+                handle["lla"] = ax.plot(j[0, [2, 4]], j[1, [2, 4]], linewidth=opts["linewidth"], color=opts["clr"][clr])
+            clr = 9
+	    if np.any(c[[1, 3]]<thresh):
+		clr += 2
+            handle["lra"] = ax.plot(j[0, [1, 3]], j[1, [1, 3]], linewidth=opts["linewidth"], color=opts["clr"][clr])
 
         # draw joints
         if dominantOnly:
             joints=[0, 1, 3, 5]
         handle["joints"] = []
         for c in joints:
-            handle["joints"].append(plt.plot(j[0, c], j[1, c], markerfacecolor=opts["clr"][c], markersize = opts["jointsize"][c],
+            handle["joints"].append(ax.plot(j[0, c], j[1, c], markerfacecolor=opts["clr"][c], markersize = opts["jointsize"][c],
                                         linewidth=opts["jointlinewidth"][c], color=opts["jointlinecolor"][c]))
 
     else:
@@ -63,10 +75,12 @@ def plotSkeleton(j, opts, handle, dominantOnly=False):
 
 def plotSkeletonDefaultopts(opts):
 
-    opts["clr"] = [cmx.jet(x)[1:] for x in xrange(10)]
+    opts["clr"] = [cmx.jet(x)[1:] for x in xrange(12)]
     #sets coulour of joints
     opts["clr"][8] = (1,0,0)
     opts["clr"][9] = (0,1,0)
+    opts["clr"][10] = (1,0,1)
+    opts["clr"][11] = (0,1,1)
     opts["linewidth"] = 2
     opts["jointsize"] = 6
     return opts

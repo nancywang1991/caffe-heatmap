@@ -1,4 +1,6 @@
 import cv2
+import matplotlib
+#matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import pdb
 import numpy as np
@@ -15,7 +17,7 @@ def applyNetImage(img, net, opt):
     net.blobs['data'].data[...] = input_data
     net.forward()
     features = net.blobs[opt["layerName"]].data
-    joints, heatmaps = processHeatmap(features, opt)
+    joints, confidence, heatmaps = processHeatmap(features, opt)
 
     #for i in xrange(7):
     #    plt.imshow(heatmaps[:,:,i])
@@ -23,17 +25,18 @@ def applyNetImage(img, net, opt):
     #pdb.set_trace()
     if opt["visualize"]:
         visualize(heatmaps, prepareImagePose(img, transpose=False), joints)
-    return heatmaps
+    return joints, confidence, heatmaps
 
 def visualize(heatmaps, img, joints):
     colours = np.array([np.array([0, 0, 1]),np.array([0, 1, 0]),np.array([1, 0, 0]),np.array([1, 1, 0]),np.array([0, 1, 1]),np.array([1, 0, 1]),np.array([0, 0, 0])])
     clrs = colours
 
-    #heatmapVis, background = getConfidenceImage(heatmaps, img, clrs)
-
-    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    heatmapVis, background = getConfidenceImage(heatmaps, img, clrs)
+    fig, ax = plt.subplots()
+    ax.imshow(heatmapVis)
+    #ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     #plt.imshow(np.ndarray.transpose(background))
-    plotSkeleton(joints, {}, {}, True)
+    plotSkeleton(joints, confidence, {}, {}, ax, True)
     plt.show()
 
 
