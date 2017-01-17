@@ -9,32 +9,34 @@ import os
 import shutil
 import getpass
 import subprocess
-# This file uses a FLIC trained model and applies it to a video sequ\ence from Poses in the Wild
+import argparse
+# This file uses a FLIC + Patient video trained model and applies it to a user selected video directory
 #
 # Download the model:
 #    wget http://tomas.pfister.fi/models/caffe-heatmap-flic.caffemodel -P ../../models/heatmap-flic-fusion/
 
-# Options
-password=getpass.getpass()
 
-for iteration in [70000]:
+def main(args, password):
     opt = {}
-    opt["gpu_id"] = 0
-    opt["itr"] = iteration
+    #Constants
     opt["visualize"] = False		# Visualise predictions?
     opt["useGPU"] = True 			# Run on GPU
     opt["dims"] = [256, 256] 		# Input dimensions (needs to match matlab.txt)
     opt["numJoints"] = 7 			# Number of joints
     opt["layerName"] = 'conv5_fusion' # Output layer name
-    opt["modelDefFile"] = '/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/matlab.prototxt' # Model definition
-    opt["modelFile"] = '/home/wangnxr/Documents/caffe-heatmap/models/_iter_%i.caffemodel' % iteration # Model weights
-    #opt["modelFile"] = '/home/wangnxr/Documents/caffe_heatmap/_iter_55600.caffemodel' # Model weights
 
-    opt["saveDir"] = '/mnt/pose_results/cb46fd46/' # Model weights
-    opt["floDir"] = '/mnt/flo_files/'
-    #opt["floDir"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/results/flo_files/new_patients/'
+    #Primary Options
+    opt["gpu_id"] = args.gpu_id
+    opt["modelDefFile"] = args.model_def#'/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/matlab.prototxt' # Model definition
+    opt["modelFile"] = args.model_weight #'/home/wangnxr/Documents/caffe-heatmap/models/_iter_70000.caffemodel' # Model weights
+    opt["saveDir"] = args.save_dir #'/mnt/pose_results/cb46fd46/' # Model weights
+    opt["floDir"] = args.flo_save_dir #'/mnt/flo_files/'
+
+    opt["inputDir_alt"] = args.vid_alt#'/mnt/data/cb46fd46_5/' # Use these videos if alt_video is True
+    opt["inputDir"] = args.vid#'/mnt/results/cb46fd46/cb46fd46_8/' # Primary Video input directory
+
+    #Secondary Options
     opt["use_flow"] = True
-    opt["type"] = "vid"
     opt["skeleton"] = True
     opt["blur_face"]= True
     opt["orig_size"] = False
@@ -42,57 +44,58 @@ for iteration in [70000]:
     opt["use_prev"] = True
     opt["alt_video"] = False
     opt["redo_old"] = False
-    #opt["modelFile"] = '/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/caffe-heatmap-flic.caffemodel' # Model weights
+    opt["save_vis"] = False
 
-
-    # Video input directory
-    opt["inputDir_alt"] = '/mnt/data/cb46fd46_5/'
-
-    opt["inputDir"] = '/mnt/results/cb46fd46/cb46fd46_8/'
-    #opt["vid_nums"] = [736]
-    #opt["vid_nums"] = [37, 77, 101, 104, 167, 217, 245, 271, 289, 327, 347, 364, 464, 516, 551, 663, 674]
-    #opt["inputDir"] = '/home/wangnxr/Documents/video_data/whole_patient_preprocessed/cb46fd46_4/special/'
-    #opt["vid_nums"] = [0]
-    # Create image file list
-    files = {}
-    if opt["type"] == "img":
-        for img_name in sorted(glob.glob(opt["inputDir"] + "/30*.png")):
-            print "Loading image: %s" % img_name
-            vid_name = img_name.split("/")[-1].split('.')[0]
-            # Apply network
-            joints, heatmaps = applyNet_im(img_name, opt)
+    if args.vid_nums:
+        vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4.enc" % num)[0] for num in args.vid_nums)
     else:
-       # pdb.set_trace()
-        if "vid_nums" in opt:
-            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4.enc" % num)[0] for num in opt["vid_nums"])
-        else:
-            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
-           # pdb.set_trace()
-        for vid_fname in vid_fnames:
-            if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
-                
-                print "Loading video: %s" % vid_fname
-                subprocess.call("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
-                vid = skvideo.io.vread(vid_fname[:-4])
-                print "Loaded"
-                vid_name = vid_fname.split("/")[-1].split('.')[0]
-                joint_file = opt["saveDir"] + vid_fname.split("/")[-1].split(".")[0] + ".txt"
-                if opt["use_prev"] and os.path.exists(joint_file):
-                    print "Using previous joint file %s" % joint_file
-                    joints, confidences = load_joint_file(joint_file)
+        vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
+    for vid_fname in vid_fnames:
+        if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
+            print "Loading video: %s" % vid_fname
+            subprocess.call("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
+            vid = skvideo.io.vread(vid_fname[:-4])
+            print "Loaded"
+            vid_name = vid_fname.split("/")[-1].split('.')[0]
+            joint_file = opt["saveDir"] + vid_fname.split("/")[-1].split(".")[0] + ".txt"
+            if opt["use_prev"] and os.path.exists(joint_file):
+                print "Using previous joint file %s" % joint_file
+                joints, confidences = load_joint_file(joint_file)
+            #pdb.set_trace()
+            else:
+            # Apply network
                 #pdb.set_trace()
-                else:
-                # Apply network
-                    #pdb.set_trace()
-                    joints, confidences, heatmaps = applyNet(vid, opt)
-                    print "Heatmap done."
-                    if opt["use_flow"]:
-                        joints, confidences = calc_flow_video(vid_name, heatmaps, opt)
-                        print "Optical flow done."
-                    save_joint_values(joints, confidences, joint_file)
-                    os.remove(vid_fname[:-4])        
+                joints, confidences, heatmaps = applyNet(vid, opt)
+                print "Heatmap done."
+                if opt["use_flow"]:
+                    joints, confidences = calc_flow_video(vid_name, heatmaps, opt)
+                    print "Optical flow done."
+                save_joint_values(joints, confidences, joint_file)
+                os.remove(vid_fname[:-4])
+            if opt["save_vis"]:
                 if opt["alt_video"]:
                     vid = skvideo.io.vread(opt["inputDir_alt"] + vid_fname.split("/")[-1].split(".")[0] + ".avi")
-                #save_visualization(vid, joints, confidences, opt["saveDir"]  + vid_fname.split("/")[-1], opt)
-            
+                save_visualization(vid, joints, confidences, opt["saveDir"]  + vid_fname.split("/")[-1], opt)
+if __name__== "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--vid', required=True, help="Video directory")
+    parser.add_argument('-v', '--vid_alt', help="Alternate video directory")
+    parser.add_argument('-s', '--save', required=True, help="Save Directory" )
+    parser.add_argument('-md', '--model_def',
+                        default='/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/matlab.prototxt',
+                        help='Model definitions' )
+    parser.add_argument('-mw', '--model_weight',
+                        default = '/home/wangnxr/Documents/caffe-heatmap/models/_iter_70000.caffemodel',
+                        help = 'trained model weights')
+    parser.add_argument('-f', '--flo_save_dir',
+                        default = '/mnt/flo_files/',
+                        help = 'location to save temporary flo files')
+    parser.add_argument('-gpu', '--gpu_id', default=0, type=int, help = "Which gpu to use")
+    parser.add_argument('-vn', 'vid_nums', nargs= '+', help= "If instantiated, only these videos will be processed")
+    parser.add_argument('-pass', '--password', help="password for secure processing")
+    args = parser.parse_args()
+    if not args.password:
+        password = getpass.getpass()
+    main(args, password)
+
 

@@ -8,6 +8,7 @@ import pdb
 import os
 import shutil
 import getpass
+import subprocess
 # This file uses a FLIC trained model and applies it to a video sequ\ence from Poses in the Wild
 #
 # Download the model:
