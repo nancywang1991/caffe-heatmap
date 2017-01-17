@@ -7,13 +7,14 @@ from flow import calc_flow_video
 import pdb
 import os
 import shutil
-
+import getpass
 # This file uses a FLIC trained model and applies it to a video sequ\ence from Poses in the Wild
 #
 # Download the model:
 #    wget http://tomas.pfister.fi/models/caffe-heatmap-flic.caffemodel -P ../../models/heatmap-flic-fusion/
 
 # Options
+password=getpass.getpass()
 
 for iteration in [70000]:
     opt = {}
@@ -25,11 +26,11 @@ for iteration in [70000]:
     opt["numJoints"] = 7 			# Number of joints
     opt["layerName"] = 'conv5_fusion' # Output layer name
     opt["modelDefFile"] = '/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/matlab.prototxt' # Model definition
-    opt["modelFile"] = '/home/wangnxr/Documents/caffe_heatmap/snapshots/_iter_%i.caffemodel' % iteration # Model weights
+    opt["modelFile"] = '/home/wangnxr/Documents/caffe-heatmap/models/_iter_%i.caffemodel' % iteration # Model weights
     #opt["modelFile"] = '/home/wangnxr/Documents/caffe_heatmap/_iter_55600.caffemodel' # Model weights
 
-    opt["saveDir"] = '/home/wangnxr/Documents/results/optical_flow_10_30/' # Model weights
-    opt["floDir"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/results/flo_files/'
+    opt["saveDir"] = '/mnt/pose_results/cb46fd46/' # Model weights
+    opt["floDir"] = '/mnt/flo_files/'
     #opt["floDir"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/results/flo_files/new_patients/'
     opt["use_flow"] = True
     opt["type"] = "vid"
@@ -44,9 +45,9 @@ for iteration in [70000]:
 
 
     # Video input directory
-    opt["inputDir_alt"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/data/cb46fd46_5/'
+    opt["inputDir_alt"] = '/mnt/data/cb46fd46_5/'
 
-    opt["inputDir"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/data/d6532718_5_vid_processed/'
+    opt["inputDir"] = '/mnt/results/cb46fd46/cb43fd46_7/'
     #opt["vid_nums"] = [736]
     #opt["vid_nums"] = [37, 77, 101, 104, 167, 217, 245, 271, 289, 327, 347, 364, 464, 516, 551, 663, 674]
     #opt["inputDir"] = '/home/wangnxr/Documents/video_data/whole_patient_preprocessed/cb46fd46_4/special/'
@@ -62,14 +63,15 @@ for iteration in [70000]:
     else:
        # pdb.set_trace()
         if "vid_nums" in opt:
-            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4" % num)[0] for num in opt["vid_nums"])
+            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4.enc" % num)[0] for num in opt["vid_nums"])
         else:
-            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4"))
+            vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
         for vid_fname in vid_fnames:
-            if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi"):
-               
+            if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
+                
                 print "Loading video: %s" % vid_fname
-                vid = skvideo.io.vread(vid_fname)
+                subprocess("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
+                vid = skvideo.io.vread(vid_fname[:-4])
                 print "Loaded"
                 vid_name = vid_fname.split("/")[-1].split('.')[0]
                 joint_file = opt["saveDir"] + vid_fname.split("/")[-1].split(".")[0] + ".txt"
@@ -89,6 +91,6 @@ for iteration in [70000]:
                             
                 if opt["alt_video"]:
                     vid = skvideo.io.vread(opt["inputDir_alt"] + vid_fname.split("/")[-1].split(".")[0] + ".avi")
-                save_visualization(vid, joints, confidences, opt["saveDir"]  + vid_fname.split("/")[-1], opt)
+                #save_visualization(vid, joints, confidences, opt["saveDir"]  + vid_fname.split("/")[-1], opt)
             
 

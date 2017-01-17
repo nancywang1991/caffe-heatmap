@@ -208,11 +208,12 @@ def get_video_flo(vid_fname, save_loc):
             img1.write("\n".join(input["img1"]))
         with open("tmp_%s/img2.txt" % vid_name, "wb")as img2:
             img2.write("\n".join(input["img2"]))
-        subprocess.call("rm /home/wangnxr/Documents/flownet-release/models/flownet/*.flo", shell=True)
-        subprocess.call("python /home/wangnxr/Documents/flownet-release/models/flownet/demo_flownet.py "
-                            "C %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt %s/tmp_%s/" 
-			     % (os.getcwd(),vid_name,os.getcwd(), vid_name, os.getcwd(), vid_name), shell=True)
-        for f, file in enumerate(sorted(glob.glob("/home/wangnxr/Documents/flownet-release/models/flownet/*.flo"))):
+        subprocess.call("rm /home/wangnxr/Documents/FlowNet/models/flownet/*.flo", shell=True)
+        subprocess.call("python /home/wangnxr/Documents/FlowNet/models/flownet/demo_flownet.py "
+                            "C %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt " 
+			     % (os.getcwd(),vid_name,os.getcwd(), vid_name), shell=True)
+       
+	for f, file in enumerate(sorted(glob.glob("/home/wangnxr/Documents/FlowNet/models/flownet/*.flo"))):
             shutil.move(file, input["save"][f])
         shutil.rmtree("tmp_%s" % vid_name)
 
