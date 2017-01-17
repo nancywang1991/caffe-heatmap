@@ -46,7 +46,7 @@ def main(args, password):
     opt["redo_old"] = False
     opt["save_vis"] = False
 
-    if args.vid_nums:
+    if hasattr(args, "vid_nums"):
         vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4.enc" % num)[0] for num in args.vid_nums)
     else:
         vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
@@ -94,7 +94,7 @@ if __name__== "__main__":
     parser.add_argument('-vn', 'vid_nums', nargs= '+', help= "If instantiated, only these videos will be processed")
     parser.add_argument('-pass', '--password', help="password for secure processing")
     args = parser.parse_args()
-    if not args.password:
+    if not hasattr(args, "password"):
         password = getpass.getpass()
     main(args, password)
 
