@@ -46,13 +46,14 @@ def main(args, password):
     opt["redo_old"] = False
     opt["save_vis"] = False
 
-    if hasattr(args, "vid_nums"):
+    if not args.vid_nums is None:
         vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*%04i.mp4.enc" % num)[0] for num in args.vid_nums)
     else:
         vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
     for vid_fname in vid_fnames:
         if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
             print "Loading video: %s" % vid_fname
+            #pdb.set_trace()
             subprocess.call("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
             vid = skvideo.io.vread(vid_fname[:-4])
             print "Loaded"
@@ -79,8 +80,8 @@ def main(args, password):
 if __name__== "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--vid', required=True, help="Video directory")
-    parser.add_argument('-v', '--vid_alt', help="Alternate video directory")
-    parser.add_argument('-s', '--save', required=True, help="Save Directory" )
+    parser.add_argument('-va', '--vid_alt', help="Alternate video directory")
+    parser.add_argument('-s', '--save_dir', required=True, help="Save Directory" )
     parser.add_argument('-md', '--model_def',
                         default='/home/wangnxr/Documents/caffe-heatmap/models/heatmap-flic-fusion/matlab.prototxt',
                         help='Model definitions' )
@@ -91,11 +92,13 @@ if __name__== "__main__":
                         default = '/mnt/flo_files/',
                         help = 'location to save temporary flo files')
     parser.add_argument('-gpu', '--gpu_id', default=0, type=int, help = "Which gpu to use")
-    parser.add_argument('-vn', 'vid_nums', nargs= '+', help= "If instantiated, only these videos will be processed")
+    parser.add_argument('-vn', '--vid_nums', nargs= '+', help= "If instantiated, only these videos will be processed")
     parser.add_argument('-pass', '--password', help="password for secure processing")
     args = parser.parse_args()
     if not hasattr(args, "password"):
         password = getpass.getpass()
+    else:
+	password = args.password
     main(args, password)
 
 
