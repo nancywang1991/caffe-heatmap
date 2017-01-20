@@ -138,9 +138,9 @@ def calc_flow_video(vid_name, heatmaps, opt):
         os.makedirs(tmp_res_fldr)
     if not os.path.exists("%s/%s/" % (opt["floDir"], vid_name)):
         if os.path.exists("%s/%s.avi"):
-            get_video_flo("%s/%s.avi" % (opt["inputDir"], vid_name), opt["floDir"])
+            get_video_flo("%s/%s.avi" % (opt["inputDir"], vid_name), opt["floDir"], opt)
         else:
-            get_video_flo("%s/%s.mp4" % (opt["inputDir"], vid_name), opt["floDir"])
+            get_video_flo("%s/%s.mp4" % (opt["inputDir"], vid_name), opt["floDir"], opt)
     mean_heatmaps = []
     for f, frame in enumerate(heatmaps):
         cnt = 1
@@ -185,7 +185,7 @@ def calc_flow_video(vid_name, heatmaps, opt):
     shutil.rmtree("%s/%s/" % (opt["floDir"], vid_name))    
     return joints_list, confidences_list
 
-def get_video_flo(vid_fname, save_loc):
+def get_video_flo(vid_fname, save_loc, opt):
 
     vid_name = vid_fname.split("/")[-1].split(".")[0]
     if not os.path.exists(save_loc + "/" + vid_name):
@@ -210,10 +210,10 @@ def get_video_flo(vid_fname, save_loc):
             img2.write("\n".join(input["img2"]))
         subprocess.call("rm /home/wangnxr/Documents/FlowNet/models/flownet/*.flo", shell=True)
         subprocess.call("python /home/wangnxr/Documents/FlowNet/models/flownet/demo_flownet.py "
-                            "C %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt " 
-			     % (os.getcwd(),vid_name,os.getcwd(), vid_name), shell=True)
+                            "C %s/%s/ %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt %i" 
+			     % (save_loc, vid_name, os.getcwd(),vid_name,os.getcwd(), vid_name, opt["gpu_id"]), shell=True)
        
-	for f, file in enumerate(sorted(glob.glob("/home/wangnxr/Documents/FlowNet/models/flownet/*.flo"))):
+	for f, file in enumerate(sorted(glob.glob("/%s/%s/*.flo" % (save_loc, vid_name)))):
             shutil.move(file, input["save"][f])
         shutil.rmtree("tmp_%s" % vid_name)
 
