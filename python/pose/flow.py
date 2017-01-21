@@ -61,6 +61,7 @@ def warp_image(im, flo_field, opt):
     resized_x = np.transpose(resized_x)
     resized_y = np.transpose(resized_y)
     if opt["warp_all"]:
+        #pdb.set_trace()
         [x,y] = np.meshgrid(np.arange(im.shape[0]),np.arange(im.shape[1]))
         xx = np.ndarray.flatten(x-resized_x)
         yy = np.ndarray.flatten(y-resized_y)
@@ -69,6 +70,7 @@ def warp_image(im, flo_field, opt):
         warped = warp_func.ev(xx, yy)
         warped = np.reshape(warped, (opt["dims"][0],opt["dims"][1]))
     else:
+        #pdb.set_trace()
         warped = copy.copy(np.transpose(im))
         candidates = peak_local_max(im, min_distance = 20, threshold_abs=0.01)
         max_warp_x = max(2,2*int(np.ceil(np.fabs(resized_x.max()))))
@@ -91,6 +93,45 @@ def warp_image(im, flo_field, opt):
         #print np.where(warped==warped.max())
         #print np.where(im==im.max())
         #pdb.set_trace()          
+    return warped
+
+def warp_image_alt(im, flo_field, opt):
+    resized_y, resized_x = flo_field
+    #resized_x = np.transpose(resized_x)
+    #resized_y = np.transpose(resized_y)
+    if opt["warp_all"]:
+        #pdb.set_trace()
+        [x,y] = np.meshgrid(np.arange(im.shape[0]),np.arange(im.shape[1]))
+        xx = np.ndarray.flatten(x-resized_x)
+        yy = np.ndarray.flatten(y-resized_y)
+        #pdb.set_trace()
+        warp_func = scipy.interpolate.RectBivariateSpline(np.arange(im.shape[0]), np.arange(im.shape[1]), im)
+        warped = warp_func.ev(xx, yy)
+        warped = np.reshape(warped, (opt["dims"][0],opt["dims"][1]))
+    else:
+        #pdb.set_trace()
+        warped = copy.copy(im)
+        candidates = peak_local_max(im, min_distance = 20, threshold_abs=0.01)
+        max_warp_x = max(2,2*int(np.ceil(np.fabs(resized_x.max()))))
+        max_warp_y = max(2,2*int(np.ceil(np.fabs(resized_y.max()))))
+        for (c_y,c_x) in candidates[::-1]:
+            c_x0 = max(0,c_y-max_warp_x)
+            c_x1 = min(im.shape[0],c_y+max_warp_x)
+            c_y0 = max(0,c_x-max_warp_y)
+            c_y1 = min(im.shape[1],c_x+max_warp_y)
+            w = c_x1-c_x0
+            h = c_y1-c_y0
+            #pdb.set_trace()
+            [x,y] = np.meshgrid(np.arange(w),np.arange(h))
+            xx = np.ndarray.flatten(x-resized_x[c_y0:c_y1, c_x0:c_x1])
+            yy = np.ndarray.flatten(y-resized_y[c_y0:c_y1, c_x0:c_x1])
+            #if max(abs(np.ndarray.flatten(resized_y[c_x0:c_x1, c_y0:c_y1])))>2:                pdb.set_trace()
+            warp_func = scipy.interpolate.RectBivariateSpline(np.arange(w), np.arange(h), im[c_x0:c_x1, c_y0:c_y1])
+            warped_temp = warp_func.ev(xx,yy)
+            warped[c_y0:c_y1, c_x0:c_x1] = np.reshape(warped_temp, (h,w))
+        #print np.where(warped==warped.max())
+        #print np.where(im==im.max())
+        #pdb.set_trace()
     return warped
 
 def global_adjust(heatmaps):
@@ -138,26 +179,27 @@ def calc_flow_video(vid_name, heatmaps, opt):
         os.makedirs(tmp_res_fldr)
     if not os.path.exists("%s/%s/" % (opt["floDir"], vid_name)):
         if os.path.exists("%s/%s.avi"):
-            get_video_flo("%s/%s.avi" % (opt["inputDir"], vid_name), opt["floDir"])
+            get_video_flo("%s/%s.avi" % (opt["inputDir"], vid_name), opt["floDir"], opt)
         else:
-            get_video_flo("%s/%s.mp4" % (opt["inputDir"], vid_name), opt["floDir"])
+            get_video_flo("%s/%s.mp4" % (opt["inputDir"], vid_name), opt["floDir"], opt)
     mean_heatmaps = []
     for f, frame in enumerate(heatmaps):
         cnt = 1
         if f%100==0:
+            
             print "warping frame %i" % f
-        warped_imgs = [1*frame[:,:,:joints_to_do]]
+        warped_imgs = [1*np.transpose(frame[:,:,:joints_to_do], axes=(2,0,1))]
         for f2 in range(max(0, f-1), min(len(heatmaps), f+2)):
             if not f==f2:
                 flo_file = "%s/%s/%i_%i.flo" % (opt["floDir"], vid_name, f2, f)
                 flo_data = load_flo_file(flo_file)
-
+                #pdb.set_trace()
                 flo_data = [cv2.resize(flo_data[:,:,0], (opt["dims"][0],opt["dims"][1])),cv2.resize(flo_data[:,:,1], (opt["dims"][0],opt["dims"][1]))]
                 if f2<f:
-                    warped_imgs.append(np.transpose(np.array([5*warp_image(mean_heatmaps[f2][:,:,j], flo_data, opt) for j in xrange(joints_to_do)])))
+                    warped_imgs.append(np.array([5*warp_image_alt(mean_heatmaps[f2][:,:,j], flo_data, opt) for j in xrange(joints_to_do)]))
                     cnt +=5
                 else:
-                    warped_imgs.append(np.transpose(np.array([warp_image(heatmaps[f2][:,:,j], flo_data, opt) for j in xrange(joints_to_do)])))
+                    warped_imgs.append(np.array([warp_image_alt(heatmaps[f2][:,:,j], flo_data, opt) for j in xrange(joints_to_do)]))
                     cnt +=1
                     #if (flo_data[0].max() >2) and (heatmaps[f2][:,:,0].max() > 0.1):
                     #if f==168:
@@ -173,7 +215,7 @@ def calc_flow_video(vid_name, heatmaps, opt):
         #    print warped_imgs[0][:,:,4].max()
         #    plt.show()
         warped_imgs = np.array(warped_imgs)
-        mean_heatmaps.append(np.sum(warped_imgs, axis=0)/cnt)
+        mean_heatmaps.append(np.transpose(np.sum(warped_imgs, axis=0)/cnt, axes=(1,2,0)))
         
     #pdb.set_trace()
     joints_list, confidences_list = global_adjust(np.array(mean_heatmaps))
@@ -185,7 +227,7 @@ def calc_flow_video(vid_name, heatmaps, opt):
     shutil.rmtree("%s/%s/" % (opt["floDir"], vid_name))    
     return joints_list, confidences_list
 
-def get_video_flo(vid_fname, save_loc):
+def get_video_flo(vid_fname, save_loc, opt):
 
     vid_name = vid_fname.split("/")[-1].split(".")[0]
     if not os.path.exists(save_loc + "/" + vid_name):
@@ -210,10 +252,10 @@ def get_video_flo(vid_fname, save_loc):
             img2.write("\n".join(input["img2"]))
         subprocess.call("rm /home/wangnxr/Documents/FlowNet/models/flownet/*.flo", shell=True)
         subprocess.call("python /home/wangnxr/Documents/FlowNet/models/flownet/demo_flownet.py "
-                            "C %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt " 
-			     % (os.getcwd(),vid_name,os.getcwd(), vid_name), shell=True)
+                            "C %s/%s/ %s/tmp_%s/img1.txt %s/tmp_%s/img2.txt %i" 
+			     % (save_loc, vid_name, os.getcwd(),vid_name,os.getcwd(), vid_name, opt["gpu_id"]), shell=True)
        
-	for f, file in enumerate(sorted(glob.glob("/home/wangnxr/Documents/FlowNet/models/flownet/*.flo"))):
+	for f, file in enumerate(sorted(glob.glob("/%s/%s/*.flo" % (save_loc, vid_name)))):
             shutil.move(file, input["save"][f])
         shutil.rmtree("tmp_%s" % vid_name)
 
