@@ -25,7 +25,7 @@ def applyNetImage(img, net, opt):
     #pdb.set_trace()
     if opt["visualize"]:
         visualize(heatmaps, prepareImagePose(img, transpose=False), joints)
-    return joints
+    return heatmaps
 
 def visualize(heatmaps, img, joints):
     colours = np.array([np.array([0, 0, 1]),np.array([0, 1, 0]),np.array([1, 0, 0]),np.array([1, 1, 0]),np.array([0, 1, 1]),np.array([1, 0, 1]),np.array([0, 0, 0])])
