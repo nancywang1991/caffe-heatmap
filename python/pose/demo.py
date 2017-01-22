@@ -68,7 +68,7 @@ for iteration in [70000]:
         else:
             vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
         for vid_fname in vid_fnames:
-            if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
+            if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".txt"):
                 
                 print "Loading video: %s" % vid_fname
                 subprocess("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
