@@ -36,7 +36,7 @@ def main(args, password):
     opt["inputDir"] = args.vid#'/mnt/results/cb46fd46/cb46fd46_8/' # Primary Video input directory
 
     #Secondary Options
-    opt["use_flow"] = True
+    opt["use_flow"] = False
     opt["skeleton"] = True
     opt["blur_face"]= True
     opt["orig_size"] = False
@@ -51,7 +51,7 @@ def main(args, password):
     else:
         vid_fnames = sorted(glob.glob(opt["inputDir"] + "/*.mp4.enc"))
     for vid_fname in vid_fnames:
-        if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".avi.enc"):
+        if opt["redo_old"] or not os.path.exists(opt["saveDir"]+vid_fname.split("/")[-1].split(".")[0]+".txt"):
             print "Loading video: %s" % vid_fname
             #pdb.set_trace()
             subprocess.call("openssl enc -d -des -in %s -out %s -pass pass:%s" % (vid_fname, vid_fname[:-4], password), shell=True)
