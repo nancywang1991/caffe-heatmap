@@ -15,16 +15,12 @@ def applyNet(vid, opt):
     opt["numFiles"] = vid.shape[0]
     net = initCaffe(opt)
     heatmaps = np.zeros(shape=(opt["numFiles"], opt["dims"][0], opt["dims"][1], opt["numJoints"]))
-    joints = []
-    confidences = []
     for ind in xrange(opt["numFiles"]):
         image = vid[ind,:,:]
         if ind%100==0:
             print "frame: %s" % ind
-        joint, confidence, heatmaps[ind,:,:] = applyNetImage(image, net, opt)
-        joints.append(joint)
-        confidences.append(confidence)
-    return joints, confidences, heatmaps
+        heatmaps[ind,:,:] = applyNetImage(image, net, opt)
+    return heatmaps
 
 def applyNet_im(im, opt):
 

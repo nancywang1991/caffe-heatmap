@@ -3,7 +3,7 @@ from applyNet import applyNet, applyNet_im
 import skvideo.io
 import glob
 from applyNet import save_visualization, save_joint_values, load_joint_file
-from flow import calc_flow_video
+from flow import calc_flow_video, global_adjust
 import pdb
 import os
 import shutil
@@ -66,11 +66,15 @@ def main(args, password):
             else:
             # Apply network
                 #pdb.set_trace()
-                joints, confidences, heatmaps = applyNet(vid, opt)
+                heatmaps = applyNet(vid, opt)
+                
                 print "Heatmap done."
                 if opt["use_flow"]:
                     joints, confidences = calc_flow_video(vid_name, heatmaps, opt)
                     print "Optical flow done."
+                else:
+                    joints, confidences = global_adjust(heatmaps)
+                heatmaps=[]
                 save_joint_values(joints, confidences, joint_file)
                 os.remove(vid_fname[:-4])
             if opt["save_vis"]:
