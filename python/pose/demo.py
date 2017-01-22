@@ -33,7 +33,7 @@ for iteration in [70000]:
     opt["saveDir"] = '/mnt/pose_results/cb46fd46/' # Model weights
     opt["floDir"] = '/mnt/flo_files/'
     #opt["floDir"] = '/media/wangnxr/b1d81c2f-943e-421f-b6bc-75e9e33bac6c/results/flo_files/new_patients/'
-    opt["use_flow"] = True
+    opt["use_flow"] = False
     opt["type"] = "vid"
     opt["skeleton"] = True
     opt["blur_face"]= True
